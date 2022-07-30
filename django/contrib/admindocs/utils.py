@@ -29,7 +29,7 @@ def get_view_name(view_func):
         return f"{klass.__module__}.{klass.__qualname__}"
     mod_name = view_func.__module__
     view_name = getattr(view_func, "__qualname__", view_func.__class__.__name__)
-    return mod_name + "." + view_name
+    return f"{mod_name}.{view_name}"
 
 
 def parse_docstring(docstring):
@@ -52,11 +52,8 @@ def parse_docstring(docstring):
             metadata = {}
             body = "\n\n".join(parts[1:])
         else:
-            metadata = dict(metadata.items())
-            if metadata:
-                body = "\n\n".join(parts[1:-1])
-            else:
-                body = "\n\n".join(parts[1:])
+            metadata = dict(metadata)
+            body = "\n\n".join(parts[1:-1]) if metadata else "\n\n".join(parts[1:])
     return title, body, metadata
 
 
@@ -72,7 +69,7 @@ def parse_rst(text, default_reference_context, thing_being_parsed=None):
         "raw_enabled": False,
         "file_insertion_enabled": False,
     }
-    thing_being_parsed = thing_being_parsed and "<%s>" % thing_being_parsed
+    thing_being_parsed = thing_being_parsed and f"<{thing_being_parsed}>"
     # Wrap ``text`` in some reST that sets the default role to ``cmsreference``,
     # then restores it.
     source = """
@@ -225,7 +222,7 @@ def replace_unnamed_groups(pattern):
     for start, end, _ in _find_groups(pattern, unnamed_group_matcher):
         if prev_end:
             final_pattern += pattern[prev_end:start]
-        final_pattern += pattern[:start] + "<var>"
+        final_pattern += f"{pattern[:start]}<var>"
         prev_end = end
     return final_pattern + pattern[prev_end:]
 
@@ -270,8 +267,8 @@ def lookup_str(urlpattern):
     if hasattr(callback, "view_class"):
         callback = callback.view_class
     elif not hasattr(callback, "__name__"):
-        return callback.__module__ + "." + callback.__class__.__name__
-    return callback.__module__ + "." + callback.__qualname__
+        return f"{callback.__module__}.{callback.__class__.__name__}"
+    return f"{callback.__module__}.{callback.__qualname__}"
 
 
 def register_callback(urlresolver, thread):
